@@ -25,55 +25,48 @@ const types = ['Detection', 'Segmentation', 'OCR'];
 const detections = ['YOLO'];
 const segmentations = ['Deeplab v3', 'Unet++'];
 const ocrs = ['OCR'];
-  
-function SelectLabels() {
-    const [age, setAge] = React.useState('');
-  
-    const handleChange = (event) => {
-      setAge(event.target.value);
-    };
-  
-    return (
-      <div>
-        <FormControl sx={{ m: 1, minWidth: 120 }}>
-          <InputLabel id="demo-simple-select-helper-label">Age</InputLabel>
-          <Select
-            labelId="demo-simple-select-helper-label"
-            id="demo-simple-select-helper"
-            value={age}
-            label="Age"
-            onChange={handleChange}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            <MenuItem value={10}>Ten</MenuItem>
-            <MenuItem value={20}>Twenty</MenuItem>
-            <MenuItem value={30}>Thirty</MenuItem>
-          </Select>
-          <FormHelperText>With label + helper text</FormHelperText>
-        </FormControl>
-        <FormControl sx={{ m: 1, minWidth: 120 }}>
-          <Select
-            value={age}
-            onChange={handleChange}
-            displayEmpty
-            inputProps={{ 'aria-label': 'Without label' }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            <MenuItem value={10}>Ten</MenuItem>
-            <MenuItem value={20}>Twenty</MenuItem>
-            <MenuItem value={30}>Thirty</MenuItem>
-          </Select>
-          <FormHelperText>Without label</FormHelperText>
-        </FormControl>
-      </div>
-    );
-  }
-  
 
+function SelectLabels() {
+  const [age, setAge] = React.useState('');
+
+  const handleChange = (event: any) => {
+    setAge(event.target.value);
+  };
+
+  return (
+    <div>
+      <FormControl sx={{ m: 1, minWidth: 150 }}>
+        <InputLabel id="deployment-type">Type</InputLabel>
+        <Select
+          labelId="demo-simple-select-helper-label"
+          id="demo-simple-select-helper"
+          value={age}
+          label="Age"
+          onChange={handleChange}
+        >
+          {/* <MenuItem value={10}>Detection</MenuItem> */}
+          <MenuItem value={20}>Segmentation</MenuItem>
+          {/* <MenuItem value={30}>OCR</MenuItem> */}
+        </Select>
+      </FormControl>
+      <FormControl sx={{ m: 1, minWidth: 200 }}>
+        <Select
+          value={age}
+          onChange={handleChange}
+          displayEmpty
+          inputProps={{ 'aria-label': 'Without label' }}
+        >
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
+          <MenuItem value={10}>Deeplab v3</MenuItem>
+          <MenuItem value={20}>Unet++</MenuItem>
+          {/* <MenuItem value={30}>Thirty</MenuItem> */}
+        </Select>
+      </FormControl>
+    </div>
+  );
+}
 
 function DeploymentPage() {
   return (
@@ -81,19 +74,20 @@ function DeploymentPage() {
       <Grid container spacing={1}>
         <Grid item xs={4}>
           <Item style={{height: '30vh'}}>
-            <Typography align='left' variant='subtitle1' style={{ fontWeight: 600 }} gutterBottom>
+            <Typography align='left' variant='subtitle2' style={{ fontWeight: 600 }} gutterBottom>
                 Type the project name
                 <TextField fullWidth
                 id="outlined-multiline-flexible"
                 label="Project name"
                 multiline
                 maxRows={2}
-                margin='normal'
+                margin='dense'
             />
             </Typography>   
             
-            <Typography align='left' variant='subtitle1' style={{ fontWeight: 600 }}>
+            <Typography align='left' variant='subtitle2' style={{ fontWeight: 600 }}>
                 Selcet model
+                <SelectLabels />
             </Typography> 
             
          </Item>

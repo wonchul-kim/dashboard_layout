@@ -6,6 +6,7 @@ import ModelTrainingSharpIcon from '@mui/icons-material/ModelTrainingSharp';
 import StorageIcon from '@material-ui/icons/Storage';
 import TaskIcon from '@mui/icons-material/Task';
 import LaptopChromebookIcon from '@mui/icons-material/LaptopChromebook';
+import PlayForWorkIcon from '@mui/icons-material/PlayForWork';
 
 export const DRAWER_LIST: DrawerItem[] = [
   {
@@ -39,17 +40,14 @@ export const Header_LIST: HeaderItem[] = [
   {
     route: ROUTES.projects,
     literal: 'Projects',
-    // Icon: AccountTreeSharpIcon,
   },
   {
     route: ROUTES.devices,
     literal: 'Devices',
-    // Icon: StorageIcon,
   },
   {
     route: ROUTES.members,
     literal: 'Members',
-    // Icon: StorageIcon,
   },
 ];
 
