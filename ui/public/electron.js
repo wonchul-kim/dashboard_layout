@@ -28,11 +28,12 @@ function createWindow() {
     /*
     * startUrl에 배정되는 url을 맨 위에서 생성한 BrowserWindow에서 실행시킵니다.
     * */
+    // win.loadURL('http://localhost:3000');
     win.loadURL(startUrl);
     win.webContents.openDevTools();
-    win.on('closed', function () {
-        win = null
-    })
+    // win.on('closed', function () {
+    //     win = null
+    // })
 }
 
 app.on('ready', createWindow);
