@@ -36,6 +36,7 @@ Starter code with the implementation of:
     ```
     "description": "This is a project demonstrating create-react-app with electron.",
     "main": "public/electron.js",
+    "homepage": "./",
     ```
     ```
     "scripts": {
