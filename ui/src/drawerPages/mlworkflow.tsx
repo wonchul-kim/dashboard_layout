@@ -20,7 +20,6 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import socketIOClient from 'socket.io-client';
 
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,7 +41,23 @@ ChartJS.register(
   Legend
 );
 
-const options = {
+const trainChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'validation loss',
+    },
+  },
+  scale: {
+    
+  }
+};
+
+const valChartOptions = {
   responsive: true,
   plugins: {
     legend: {
@@ -54,7 +69,6 @@ const options = {
     },
   },
 };
-
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -74,8 +88,8 @@ interface paramsState {
   image_size: Number,
 
   epoch: Number,
-  trainValLoss: Number, 
-  trainTrainLoss: Number, 
+  trainValLoss: Number,
+  trainTrainLoss: Number,
   trainStatus: String,
   info: String,
   connection: String,
@@ -104,7 +118,7 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
 
       epoch: 0,
       trainValLoss: 0,
-      trainTrainLoss: 0, 
+      trainTrainLoss: 0,
       trainStatus: "Train",
       info: "",
       connection: "NOT Connected",
@@ -118,12 +132,30 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
   epochList_ = [1, 2, 3];
   trainLossList_ = [1, 2, 3];
   // SOCKET IO SETTINGS *******************************************************
-  fromServerTrainData = {
+  trainData = {
     labels: this.epochList_,
     datasets: [
       {
         label: 'val. loss',
-        data: this.trainLossList_, 
+        data: this.trainLossList_,
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      },
+      {
+        label: 'train loss',
+        data: [2, 2, 2.5],
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+      },
+    ],
+  };
+
+  valData = {
+    labels: this.epochList_,
+    datasets: [
+      {
+        label: 'val. loss',
+        data: this.trainLossList_,
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
       },
@@ -142,11 +174,12 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
 
   trainDataHandleFunc = (data: any) => {
     console.log("trainData", data);
-    this.setState({ epoch: data.epoch, 
-                    trainValLoss: data.trainValLoss,
-                    epochList: [...this.state.epochList, data.epoch],
-                    trainValLossList: [...this.state.trainValLossList, data.trainValLoss],
-                  });
+    this.setState({
+      epoch: data.epoch,
+      trainValLoss: data.trainValLoss,
+      epochList: [...this.state.epochList, data.epoch],
+      trainValLossList: [...this.state.trainValLossList, data.trainValLoss],
+    });
     console.log(">>>", this.state.trainValLossList)
     console.log(">>>>", this.state.epochList)
   }
@@ -171,9 +204,9 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
     this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND >>>>>>>"));
     this.socket.on("disconnect", () => console.log("* DISCONNECTED TO BACKEND .....!!!"));
     // this.socket.emit("Start", {"status": "Start the training >>>"});
-    this.setState({trainStatus: "Train"});
+    this.setState({ trainStatus: "Train" });
     this.socket.on('response', (data: any) => {
-      this.setState({connection: data.connection});
+      this.setState({ connection: data.connection });
       console.log("response from connection", data.connection);
     });
     this.socket.on("trainData", this.trainDataHandleFunc);
@@ -183,28 +216,28 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
 
     if (this.state.trainStatus === 'Train') {
       console.log("Clicked Train Button")
-      this.setState({trainStatus: "Stop"});
+      this.setState({ trainStatus: "Stop" });
       e.preventDefault();
       this.sendParams();
       // this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND"));
-      this.socket.emit("Start", {"status": "Start the training >>>"});
+      this.socket.emit("Start", { "status": "Start the training >>>" });
       // this.socket.on('response', data => {
       //   this.setState({connection: data.connection});
       //   console.log("response from connection", data.connection);
       // });
       // this.socket.on("trainData", this.trainDataHandleFunc);
     }
-    else if (this.state.trainStatus === 'Stop'){
+    else if (this.state.trainStatus === 'Stop') {
       console.log("Clicked Stop Button");
-      this.setState({trainStatus: "Train"});
+      this.setState({ trainStatus: "Train" });
       e.preventDefault();
-      this.socket.emit("Stop", {"status": "Stop the training !!!!"});
+      this.socket.emit("Stop", { "status": "Stop the training !!!!" });
     }
   }
 
 
   sendParams = async () => {
-    const url = '/mlworkflow/train-parameters'; 
+    const url = '/mlworkflow/train-parameters';
     // const formData = new FormData();
     // formData.append('project_name', this.state.project_name);
     // formData.append('model_name', this.state.model_name);
@@ -332,10 +365,10 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             </FormControl>
 
             <Stack direction="row" spacing={10}>
-              {this.state.trainStatus === 'Train' ? 
-                <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{width: '300px'}}> {this.state.trainStatus} </Button> 
-                : <Button variant='contained' color='error' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{width: '300px'}}> {this.state.trainStatus} </Button> }
-              <Button variant='contained' color='error' startIcon={<DeleteIcon />} onClick={this.handleResetButton}> Reset </Button>
+              {this.state.trainStatus === 'Train' ?
+                <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{ width: '300px' }}> {this.state.trainStatus} </Button>
+                : <Button variant='contained' color='error' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{ width: '300px' }}> {this.state.trainStatus} </Button>}
+              <Button variant='contained' color='secondary' startIcon={<DeleteIcon />} onClick={this.handleResetButton}> Reset </Button>
             </Stack>
           </Item>
 
@@ -343,13 +376,15 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
         </Grid>
         <Grid item xs={8}>
           <Item style={{ height: '48.2vh' }}>
-            Datasets
+            train loss (epoch: {this.state.epoch}  loss: {this.state.trainTrainLossList}) <br />
+            {this.state.trainTrainLossList}
+            <Line options={trainChartOptions} data={this.trainData} height='75vh'/>
           </Item>
           <Item style={{ height: '48.2vh' }}>
-            validation loss (epoch: {this.state.epoch}  loss: {this.state.trainValLossList}) <br/>
+            validation loss (epoch: {this.state.epoch}  loss: {this.state.trainValLossList}) <br />
             {this.state.trainValLossList}
-            <Line options={options} data={this.fromServerTrainData} />
-            </Item>
+            <Line options={valChartOptions} data={this.valData} height='75vh' />
+          </Item>
         </Grid>
       </Grid>
 
