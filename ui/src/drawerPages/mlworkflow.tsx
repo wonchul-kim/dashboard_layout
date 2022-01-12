@@ -20,6 +20,42 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import socketIOClient from 'socket.io-client';
 
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'validation loss',
+    },
+  },
+};
+
+
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
   textAlign: 'center',
@@ -38,10 +74,15 @@ interface paramsState {
   image_size: Number,
 
   epoch: Number,
-  trainLoss: Number, 
+  trainValLoss: Number, 
+  trainTrainLoss: Number, 
   trainStatus: String,
   info: String,
   connection: String,
+
+  epochList: String[],
+  trainValLossList: String[],
+  trainTrainLossList: String[],
 }
 
 interface appProps {
@@ -62,21 +103,52 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
       image_size: 3,
 
       epoch: 0,
-      trainLoss: 0,
+      trainValLoss: 0,
+      trainTrainLoss: 0, 
       trainStatus: "OFF",
       info: "",
-      connection: "NOT Connected"
+      connection: "NOT Connected",
+
+      epochList: [],
+      trainValLossList: [],
+      trainTrainLossList: [],
     }
   }
 
+  epochList_ = [1, 2, 3];
+  trainLossList_ = [1, 2, 3];
   // SOCKET IO SETTINGS *******************************************************
+  fromServerTrainData = {
+    labels: this.epochList_,
+    datasets: [
+      {
+        label: 'val. loss',
+        data: this.trainLossList_, 
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      },
+      {
+        label: 'train loss',
+        data: [2, 2, 2.5],
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+      },
+    ],
+  };
+
   socket = socketIOClient("http://localhost:5000", {
     reconnection: false
   })
 
   trainDataHandleFunc = (data: any) => {
     console.log("trainData", data);
-    this.setState({epoch: data.epoch, trainLoss: data.trainLoss});
+    this.setState({ epoch: data.epoch, 
+                    trainValLoss: data.trainValLoss,
+                    epochList: [...this.state.epochList, data.epoch],
+                    trainValLossList: [...this.state.trainValLossList, data.trainValLoss],
+                  });
+    console.log(">>>", this.state.trainValLossList)
+    console.log(">>>>", this.state.epochList)
   }
 
   compononetWillUnmount() {
@@ -270,8 +342,10 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             Datasets
           </Item>
           <Item style={{ height: '48.2vh' }}>
-            validation loss (epoch: {this.state.epoch}  loss: {this.state.trainLoss})
-          </Item>
+            validation loss (epoch: {this.state.epoch}  loss: {this.state.trainValLossList}) <br/>
+            {this.state.trainValLossList}
+            <Line options={options} data={this.fromServerTrainData} />
+            </Item>
         </Grid>
       </Grid>
 
