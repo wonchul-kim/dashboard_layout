@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -15,10 +15,10 @@ import { Button, makeStyles } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Stack from '@mui/material/Stack';
-import post from 'axios';
+import axios from 'axios';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
-
+import socketIOClient from 'socket.io-client';
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -28,20 +28,25 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 interface paramsState {
-  project_name: string,
-  model_name: string,
+  project_name: String,
+  model_name: String,
   wandb: boolean,
-  device: string,
-  learning_rate: number,
-  number_of_epochs: number,
-  batch_size: number,
-  image_size: number,
+  device: String,
+  learning_rate: Number,
+  number_of_epochs: Number,
+  batch_size: Number,
+  image_size: Number,
+
+  epoch: Number,
+  trainLoss: Number, 
+  trainStatus: String,
+  info: String,
+  connection: String,
 }
 
 interface appProps {
 
 }
-
 
 class MLWorkflowPage extends Component<appProps, paramsState> {
   constructor(props: any) {
@@ -54,34 +59,95 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
       learning_rate: 0.01,
       number_of_epochs: 10,
       batch_size: 8,
-      image_size: 3
+      image_size: 3,
+
+      epoch: 0,
+      trainLoss: 0,
+      trainStatus: "OFF",
+      info: "",
+      connection: "NOT Connected"
     }
   }
 
-  handleApplyButton = (e: any) => {
-    e.preventDefault()
-    this.sendParams()
+  // SOCKET IO SETTINGS *******************************************************
+  socket = socketIOClient("http://localhost:5000", {
+    reconnection: false
+  })
+
+  trainDataHandleFunc = (data: any) => {
+    console.log("trainData", data);
+    this.setState({epoch: data.epoch, trainLoss: data.trainLoss});
   }
 
-  sendParams = () => {
-    const url = '/mlworkflow/train-parameters';
-    const formData = new FormData();
-    formData.append('project_name', this.state.project_name);
-    formData.append('model_name', this.state.model_name);
-    // formData.append('wandb', this.state.wandb);
-    formData.append('device', this.state.device);
-    formData.append('learning_rate', String(this.state.learning_rate));
-    formData.append('number_of_epochs', String(this.state.number_of_epochs));
-    formData.append('batch_size', String(this.state.batch_size));
-    formData.append('image_size', String(this.state.image_size));
+  compononetWillUnmount() {
+    this.socket.close();
+    console.log("* Component Unmounted !!!");
+    this.socket.off("trainData", this.trainDataHandleFunc);
+  }
 
-    return post(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'multipart/form-data'
-      },
-      data: formData
+  componentWillMount() {
+    // this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND"));
+    // this.socket.on('response', data => {
+    //   this.setState({connection: data.connection});
+    // });
+    // this.socket.on("trainData", data => {
+    //   this.setState({trainLoss: data.trainLoss,
+    //                  info: data.info});
+
+    //   console.log("trainData", data);
+    // });
+    this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND >>>>>>>"));
+    this.socket.on("disconnect", () => console.log("* DISCONNECTED TO BACKEND .....!!!"));
+    // this.socket.emit("Start", {"status": "Start the training >>>"});
+    // this.setState({trainStatus: "ON"});
+    this.socket.on('response', (data: any) => {
+      this.setState({connection: data.connection});
+      console.log("response from connection", data.connection);
     });
+    this.socket.on("trainData", this.trainDataHandleFunc);
+  }
+
+  handleTrainButton = (e: any) => {
+    console.log("Clicked Train Button")
+    e.preventDefault();
+    this.sendParams();
+    // this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND"));
+    this.socket.emit("Start", {"status": "Start the training >>>"});
+    this.setState({trainStatus: "ON"});
+    // this.socket.on('response', data => {
+    //   this.setState({connection: data.connection});
+    //   console.log("response from connection", data.connection);
+    // });
+    // this.socket.on("trainData", this.trainDataHandleFunc);
+  }
+
+  handleStopButton = (e: any) => {
+    console.log("Clicked Stop Button");
+    e.preventDefault();
+    this.socket.emit("Stop", {"status": "Stop the training !!!!"});
+    this.setState({trainStatus: "OFF"});
+  }
+
+  sendParams = async () => {
+    const url = '/mlworkflow/train-parameters'; 
+    // const formData = new FormData();
+    // formData.append('project_name', this.state.project_name);
+    // formData.append('model_name', this.state.model_name);
+    // formData.append('wandb', String(this.state.wandb));
+    // formData.append('device', this.state.device);
+    // formData.append('learning_rate', String(this.state.learning_rate));
+    // formData.append('number_of_epochs', String(this.state.number_of_epochs));
+    // formData.append('batch_size', String(this.state.batch_size));
+    // formData.append('image_size', String(this.state.image_size));
+
+    // return post(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'content-type': 'multipart/form-data'
+    //   },
+    //   data: formData
+    // });
+    return await axios.post(url, this.state)
   }
 
   handleLoadButton = (e: any) => {
@@ -133,7 +199,8 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
                 style={{ width: '300px' }}
               >
                 <MenuItem value=""> <em> Model Name </em> </MenuItem>
-                <MenuItem value="deeplabv3">Deeplab v3</MenuItem>
+                <MenuItem value="deeplabv3_resnet101">Deeplab v3 ResNet101</MenuItem>
+                <MenuItem value="deeplabv3_resnet50">Deeplab v3 ResNet50</MenuItem>
                 <MenuItem value="unetpp">Unet++</MenuItem>
               </Select>
             </FormControl>
@@ -190,7 +257,8 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             </FormControl>
 
             <Stack direction="row" spacing={10}>
-              <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleApplyButton}> Apply </Button>
+              <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleTrainButton}> Train </Button>
+              <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleStopButton}> Stop </Button>
               <Button variant='contained' color='error' startIcon={<DeleteIcon />} onClick={this.handleResetButton}> Reset </Button>
             </Stack>
           </Item>
@@ -202,7 +270,7 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             Datasets
           </Item>
           <Item style={{ height: '48.2vh' }}>
-            training graph
+            validation loss (epoch: {this.state.epoch}  loss: {this.state.trainLoss})
           </Item>
         </Grid>
       </Grid>

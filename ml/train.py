@@ -88,7 +88,7 @@ def train_one_epoch(model, loss_fn, _loss_fn, optimizer, data_loader, lr_schedul
 
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
 
-def main(args):
+def main(args, socketio=None):
 
     info_weights = {'best': None, 'last': None}
     device = torch.device(args.device)
@@ -163,6 +163,9 @@ def main(args):
     for epoch in range(args.start_epoch, args.num_epochs):
         train_one_epoch(model, loss_fn, args.loss, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq)
         confmat, losses_val = evaluate(model, loss_fn, args.loss, data_loader_test, device=device, num_classes=num_classes)
+        if socketio != None:
+            socketio.emit("trainData", {'trainLoss': losses_val})
+
         print(confmat)
 
         checkpoint = {
@@ -199,7 +202,7 @@ def main(args):
 def get_args_parser_torchvision(add_help=True):
     
     parser = argparse.ArgumentParser(description='Segmentation', add_help=add_help)
-
+    # parser.add_argument("--project_name", default="NONE")
     parser.add_argument('--data-path', default='/home/wonchul/HDD/datasets/projects/interojo/3rd_poc_/coco_datasets_good/react_bubble_damage_print_dust', help='dataset path')
     # parser.add_argument('--data-path', default='/home/nvadmin/wonchul/mnt/HDD/datasets/projects/interojo/3rd_poc_/coco_datasets_good/react_bubble_damage_print_dust', help='dataset path')
     parser.add_argument('--dataset-type', default='coco', help='dataset name')
@@ -208,7 +211,7 @@ def get_args_parser_torchvision(add_help=True):
     parser.add_argument('--loss', default='DiceLoss', help='loss type: None, BCEDiceLoss, aux_loss, DiceLoss')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('--device-ids', default='0,1', help='gpu device ids')
-    parser.add_argument('--batch-size', default=4, type=int)
+    parser.add_argument('--batch-size', default=32, type=int)
     parser.add_argument('--num-epochs', default=131, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('--base-imgsz', default=80, type=int, help='base image size')
