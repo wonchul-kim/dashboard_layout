@@ -105,7 +105,7 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
       epoch: 0,
       trainValLoss: 0,
       trainTrainLoss: 0, 
-      trainStatus: "OFF",
+      trainStatus: "Train",
       info: "",
       connection: "NOT Connected",
 
@@ -171,7 +171,7 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
     this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND >>>>>>>"));
     this.socket.on("disconnect", () => console.log("* DISCONNECTED TO BACKEND .....!!!"));
     // this.socket.emit("Start", {"status": "Start the training >>>"});
-    // this.setState({trainStatus: "ON"});
+    this.setState({trainStatus: "Train"});
     this.socket.on('response', (data: any) => {
       this.setState({connection: data.connection});
       console.log("response from connection", data.connection);
@@ -180,25 +180,28 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
   }
 
   handleTrainButton = (e: any) => {
-    console.log("Clicked Train Button")
-    e.preventDefault();
-    this.sendParams();
-    // this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND"));
-    this.socket.emit("Start", {"status": "Start the training >>>"});
-    this.setState({trainStatus: "ON"});
-    // this.socket.on('response', data => {
-    //   this.setState({connection: data.connection});
-    //   console.log("response from connection", data.connection);
-    // });
-    // this.socket.on("trainData", this.trainDataHandleFunc);
+
+    if (this.state.trainStatus === 'Train') {
+      console.log("Clicked Train Button")
+      this.setState({trainStatus: "Stop"});
+      e.preventDefault();
+      this.sendParams();
+      // this.socket.on("connect", () => console.log("* CONNECTED TO BACKEND"));
+      this.socket.emit("Start", {"status": "Start the training >>>"});
+      // this.socket.on('response', data => {
+      //   this.setState({connection: data.connection});
+      //   console.log("response from connection", data.connection);
+      // });
+      // this.socket.on("trainData", this.trainDataHandleFunc);
+    }
+    else if (this.state.trainStatus === 'Stop'){
+      console.log("Clicked Stop Button");
+      this.setState({trainStatus: "Train"});
+      e.preventDefault();
+      this.socket.emit("Stop", {"status": "Stop the training !!!!"});
+    }
   }
 
-  handleStopButton = (e: any) => {
-    console.log("Clicked Stop Button");
-    e.preventDefault();
-    this.socket.emit("Stop", {"status": "Stop the training !!!!"});
-    this.setState({trainStatus: "OFF"});
-  }
 
   sendParams = async () => {
     const url = '/mlworkflow/train-parameters'; 
@@ -329,8 +332,9 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             </FormControl>
 
             <Stack direction="row" spacing={10}>
-              <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleTrainButton}> Train </Button>
-              <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleStopButton}> Stop </Button>
+              {this.state.trainStatus === 'Train' ? 
+                <Button variant='contained' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{width: '300px'}}> {this.state.trainStatus} </Button> 
+                : <Button variant='contained' color='error' endIcon={<SendIcon />} onClick={this.handleTrainButton} style={{width: '300px'}}> {this.state.trainStatus} </Button> }
               <Button variant='contained' color='error' startIcon={<DeleteIcon />} onClick={this.handleResetButton}> Reset </Button>
             </Stack>
           </Item>
