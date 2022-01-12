@@ -30,7 +30,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+
 import { Line } from 'react-chartjs-2';
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -53,7 +55,7 @@ const trainChartOptions = {
     },
   },
   scale: {
-    
+
   }
 };
 
@@ -378,7 +380,7 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
           <Item style={{ height: '48.2vh' }}>
             train loss (epoch: {this.state.epoch}  loss: {this.state.trainTrainLossList}) <br />
             {this.state.trainTrainLossList}
-            <Line options={trainChartOptions} data={this.trainData} height='75vh'/>
+            <Line options={trainChartOptions} data={this.trainData} height='75vh' />
           </Item>
           <Item style={{ height: '48.2vh' }}>
             validation loss (epoch: {this.state.epoch}  loss: {this.state.trainValLossList}) <br />
