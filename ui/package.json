@@ -23,11 +23,9 @@
     "@types/react-dom": "^17.0.0",
     "@types/react-router-dom": "^5.1.7",
     "axios": "^0.24.0",
-    "chart.js": "^3.7.0",
     "echarts-for-react": "^3.0.2",
     "express": "^4.17.2",
     "react": "^17.0.1",
-    "react-chartjs-2": "^4.0.0",
     "react-dom": "^17.0.1",
     "react-icons": "^4.3.1",
     "react-native": "^0.66.4",
@@ -46,7 +44,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "electron": "electron .",
-    "electron-pack": "yarn build && electron-builder build -c.extraMetadata.main=build/electron.js"
+    "electron-pack": "npm run build && electron-builder build -c.extraMetadata.main=build/electron.js"
   },
   "eslintConfig": {
     "extends": [

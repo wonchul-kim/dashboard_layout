@@ -47,7 +47,7 @@ Starter code with the implementation of:
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "electron": "electron .",
-    "electron-pack": "yarn build && electron-builder build -c.extraMetadata.main=build/electron.js"
+    "electron-pack": "npm run build && electron-builder build -c.extraMetadata.main=build/electron.js"
     },
     ```
     ```
@@ -62,8 +62,9 @@ Starter code with the implementation of:
     ```
     npm start
     ```
-    on another terminal,
+    on another terminal, 
     ```
+    npm run build
     npm run electron
     ```
     

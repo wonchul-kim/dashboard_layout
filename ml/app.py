@@ -80,7 +80,7 @@ def save_parameters(params):
 def background_thread_():
     """Example of how to send server generated events to clients."""
     count = 0
-    args.batch_size *= 4
+    # args.batch_size *= 4
     info_weights = {'best': None, 'last': None}
     device = torch.device(args.device)
     
