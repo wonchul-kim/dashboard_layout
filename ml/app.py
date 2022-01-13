@@ -15,11 +15,14 @@ import utils
 import json
 
 async_mode = None
-# async_mode = "threading"
+async_mode = "threading"
 # async_mode = "eventlet"
 # async_mode = "gevent"
 
 app = Flask(__name__)
+app.debug = True 
+app.host = 'localhost'
+app.port = 5000
 socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins="*")
 thread_lock = Lock()
 thread_stop_event = Event()
@@ -77,10 +80,10 @@ def save_parameters(params):
 def background_thread_():
     """Example of how to send server generated events to clients."""
     count = 0
-
+    args.batch_size *= 4
     info_weights = {'best': None, 'last': None}
     device = torch.device(args.device)
-
+    
     dataset, num_classes = get_dataset(args.data_path, args.dataset_type, "train", get_transform(True, args.base_imgsz, args.crop_imgsz), args.num_classes)
     dataset_test, _ = get_dataset(args.data_path, args.dataset_type, "val", get_transform(False, args.base_imgsz, args.crop_imgsz), args.num_classes)
 
@@ -151,12 +154,15 @@ def background_thread_():
     
 
     try:
+        epoch = 0
+        losses_val = 0
+        train_loss = 0
         epoch = args.start_epoch
         while not thread_stop_event.isSet() and epoch < args.num_epochs:
             train_loss = train_one_epoch(model, loss_fn, args.loss, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq)
             confmat, losses_val = evaluate(model, loss_fn, args.loss, data_loader_test, device=device, num_classes=num_classes)
 
-            print(confmat)
+            # print(confmat)
 
             # checkpoint = {
             #     'model': model.state_dict(),
@@ -185,8 +191,8 @@ def background_thread_():
             #     f.write('\n')
 
             # main(args, socketio)
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {}: {}  &  {} ".format(epoch, losses_val, train_loss))
             socketio.emit("trainData", {"epoch": epoch, "valLoss": losses_val, "trainLoss": train_loss})
-            print(">> {}: {}  &  {} ".format(epoch, losses_val, train_loss))
             epoch += 1
     except KeyboardInterrupt:
         total_time = time.time() - start_time
@@ -213,7 +219,7 @@ def background_thread():
 # @socketio.on("connect")
 @socketio.event
 def connect():
-    emit('responseConnection', {'connected': 'Connected'})
+    emit('responseConnection', {'connection': 'Connected'})
     print("*********************************************************************")
     print("                        C O N N E T E D ! ! !                        ")
     print("*********************************************************************")

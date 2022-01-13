@@ -88,7 +88,7 @@ def train_one_epoch(model, loss_fn, _loss_fn, optimizer, data_loader, lr_schedul
 
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
     
-    return loss.item()
+    return loss.cpu().item()
 
 def main(args, socketio=None):
 

@@ -133,9 +133,9 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
     this.socket.on("disconnect", () => console.log("* DISCONNECTED TO BACKEND .....!!!"));
     // this.socket.emit("Start", {"status": "Start the training >>>"});
     this.setState({ trainStatus: "Train" });
-    this.socket.on('response', (data: any) => {
+    this.socket.on('responseConnection', (data: any) => {
       this.setState({ connection: data.connection });
-      console.log("response from connection", data.connection);
+      console.log("[From Server] ", data.connection);
     });
     this.socket.on("trainData", this.trainDataHandleFunc);
   }
@@ -289,9 +289,29 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
         </Grid>
         <Grid item xs={8}>
           <Item style={{ height: '48.2vh' }}>
-            train loss (epoch: {this.state.epoch}  loss: {this.state.trainLoss}) <br />
+            {/* train loss (epoch: {this.state.epoch}  loss: {this.state.trainLoss}) <br /> */}
             <ReactEcharts
               option={{
+                title: {
+                  text: 'Losses',
+                },
+                tooltip: {
+                  trigger: 'axis'
+                },
+                legend: {
+                  data: ['train', 'validation']
+                },
+                grid: {
+                  left: '3%',
+                  right: '4%',
+                  bottom: '3%',
+                  containLabel: true
+                },
+                toolbox: {
+                  feature: {
+                    saveAsImage: {}
+                  }
+                },
                 xAxis: {
                   type: 'category',
                   boudaryGap: false,
@@ -301,13 +321,13 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
                   type: 'value'
                 },
                 series: [{
-                  name: 'train loss',
+                  name: 'train',
                   type: 'line',
                   stack: 'Total',
                   data: this.state.trainLossList,
                   },
                   {
-                    name: 'validation loss',
+                    name: 'validation',
                     type: 'line',
                     stack: 'Total',
                     data: this.state.valLossList,
@@ -317,7 +337,51 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
             />
           </Item>
           <Item style={{ height: '48.2vh' }}>
-            validation loss (epoch: {this.state.epoch}  loss: {this.state.valLoss}) <br />
+          <ReactEcharts
+              option={{
+                title: {
+                  text: 'Accuracies',
+                },
+                tooltip: {
+                  trigger: 'axis'
+                },
+                legend: {
+                  data: ['train', 'validation']
+                },
+                grid: {
+                  left: '3%',
+                  right: '4%',
+                  bottom: '3%',
+                  containLabel: true
+                },
+                toolbox: {
+                  feature: {
+                    saveAsImage: {}
+                  }
+                },
+                xAxis: {
+                  type: 'category',
+                  boudaryGap: false,
+                  data: this.state.epochList
+                },
+                yAxis: {
+                  type: 'value'
+                },
+                series: [{
+                  name: 'train',
+                  type: 'line',
+                  stack: 'Total',
+                  data: this.state.trainLossList,
+                  },
+                  {
+                    name: 'validation',
+                    type: 'line',
+                    stack: 'Total',
+                    data: this.state.valLossList,
+                  },
+                ]
+              }}
+            />
           </Item>
         </Grid>
       </Grid>
