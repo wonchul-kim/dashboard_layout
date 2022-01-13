@@ -19,8 +19,58 @@ import axios from 'axios';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import socketIOClient from 'socket.io-client';
-import ReactEcharts from 'echarts-for-react';
-import { ThirtyFpsSelectTwoTone } from '@mui/icons-material';
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const trainChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'validation loss',
+    },
+  },
+  scale: {
+
+  }
+};
+
+const valChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'validation loss',
+    },
+  },
+};
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -46,9 +96,11 @@ interface paramsState {
   info: String,
   connection: String,
 
-  epochList: Number[],
-  valLossList: Number[],
-  trainLossList: Number[],
+  // epochList: Number[],
+  // valLossList: Number[],
+  // trainLossList: Number[],
+
+  lossChartData: any,
 }
 
 interface appProps {
@@ -76,9 +128,27 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
       info: "",
       connection: "NOT Connected",
 
-      epochList: [],
-      valLossList: [],
-      trainLossList: [],
+      // epochList: [],
+      // valLossList: [],
+      // trainLossList: [],
+
+      lossChartData: { 
+        labels: [0],//this.state.epochList,
+        datasets: [
+          {
+            label: 'val. loss',
+            data: [0.],
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          },
+          {
+            label: 'train loss',
+            data: [0.],
+            borderColor: 'rgb(53, 162, 235)',
+            backgroundColor: 'rgba(53, 162, 235, 0.5)',
+          },
+        ],
+      },
     }
   }
 
@@ -86,30 +156,22 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
     reconnection: false
   })
 
-  resetChartData(){
-    this.setState({
-      epoch: 0,
-      valLoss: 0,
-      trainLoss: 0,
-      trainStatus: "Train",
-      info: "",
-      connection: "NOT Connected",
-
-      epochList: [],
-      valLossList: [],
-      trainLossList: [],
-    })  
-  }
-
 
   trainDataHandleFunc = (data: any) => {
     console.log("trainData", data);
     this.setState({
       epoch: data.epoch, valLoss: data.valLoss, trainLoss: data.trainLoss,
-      epochList: [...this.state.epochList, data.epoch],
-      valLossList: [...this.state.valLossList, data.valLoss],
-      trainLossList: [...this.state.trainLossList, data.trainLoss],
+      // epochList: [...this.state.epochList, data.epoch],
+      // valLossList: [...this.state.valLossList, data.valLoss],
     });
+
+    this.state.lossChartData.labels.push(data.epoch);
+    this.state.lossChartData.datasets[0].data.push(data.valLoss);
+    this.state.lossChartData.datasets[1].data.push(data.trainLoss);
+
+    console.log(">>>", this.state.lossChartData.labels)
+    console.log(">>>>", this.state.lossChartData.datasets[0].data)
+    console.log(">>>>", this.state.lossChartData.datasets[1].data)
   }
 
   compononetWillUnmount() {
@@ -160,7 +222,6 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
       this.setState({ trainStatus: "Train" });
       e.preventDefault();
       this.socket.emit("Stop", { "status": "Stop the training !!!!" });
-      this.resetChartData();
     }
   }
 
@@ -290,34 +351,11 @@ class MLWorkflowPage extends Component<appProps, paramsState> {
         <Grid item xs={8}>
           <Item style={{ height: '48.2vh' }}>
             train loss (epoch: {this.state.epoch}  loss: {this.state.trainLoss}) <br />
-            <ReactEcharts
-              option={{
-                xAxis: {
-                  type: 'category',
-                  boudaryGap: false,
-                  data: this.state.epochList
-                },
-                yAxis: {
-                  type: 'value'
-                },
-                series: [{
-                  name: 'train loss',
-                  type: 'line',
-                  stack: 'Total',
-                  data: this.state.trainLossList,
-                  },
-                  {
-                    name: 'validation loss',
-                    type: 'line',
-                    stack: 'Total',
-                    data: this.state.valLossList,
-                  },
-                ]
-              }}
-            />
+            <Line options={trainChartOptions} data={this.state.lossChartData} height='75vh' onChange={this.trainDataHandleFunc}/>
           </Item>
           <Item style={{ height: '48.2vh' }}>
             validation loss (epoch: {this.state.epoch}  loss: {this.state.valLoss}) <br />
+            <Line options={valChartOptions} data={this.state.lossChartData} height='75vh' />
           </Item>
         </Grid>
       </Grid>

@@ -74,7 +74,7 @@ def save_parameters(params):
 
     return args
 
-def background_thread():
+def background_thread_():
     """Example of how to send server generated events to clients."""
     count = 0
 
@@ -153,7 +153,7 @@ def background_thread():
     try:
         epoch = args.start_epoch
         while not thread_stop_event.isSet() and epoch < args.num_epochs:
-            train_one_epoch(model, loss_fn, args.loss, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq)
+            train_loss = train_one_epoch(model, loss_fn, args.loss, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq)
             confmat, losses_val = evaluate(model, loss_fn, args.loss, data_loader_test, device=device, num_classes=num_classes)
 
             print(confmat)
@@ -185,16 +185,29 @@ def background_thread():
             #     f.write('\n')
 
             # main(args, socketio)
-            socketio.emit("trainData", {"epoch": epoch, "trainLoss": losses_val})
-            print(">>>>>>>>>>>>", losses_val)
-            # socketio.emit("trainData", {"trainLoss": epoch})
-            print(">> ", epoch, type(epoch), type(losses_val))
-            socketio.sleep(0.3)
+            socketio.emit("trainData", {"epoch": epoch, "valLoss": losses_val, "trainLoss": train_loss})
+            print(">> {}: {}  &  {} ".format(epoch, losses_val, train_loss))
             epoch += 1
     except KeyboardInterrupt:
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
         print('Training time {}'.format(total_time_str))
+        print("Keyboard  Interrupt")
+
+def background_thread():
+    try:
+        epoch = 0
+        losses_val = 0
+        train_loss = 0
+        while not thread_stop_event.isSet():
+            socketio.emit("trainData", {"epoch": epoch, "valLoss": losses_val, "trainLoss": train_loss})
+            print(train_loss)
+            print(">> {}: {}  &  {} ".format(epoch, losses_val, train_loss))
+            socketio.sleep(1)
+            epoch += 1
+            losses_val += 0.1
+            train_loss += 0.2
+    except KeyboardInterrupt:
         print("Keyboard  Interrupt")
 
 # @socketio.on("connect")
@@ -211,7 +224,7 @@ def handle_message(msg):
     emit('connect', {'connection': "Connected"})
     thread_stop_event.clear()
     # with thread_lock:
-    socketio.start_background_task(background_thread)
+    socketio.start_background_task(background_thread_)
 
 @socketio.on('Stop')
 def handle_message(msg):
